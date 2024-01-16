@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Arigarumi Counter</title>
+    <style type="text/css">
+        body {
+            font-family: monospace; 
+            font-size: 1.5vw;
+        }
+
+        body main {
+            padding: 10px; 
+        }
+
+        .row-wrapper {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .new-row {
+            margin-top: 10px;
+            align-items: center;
+            opacity: 50%; 
+            cursor: pointer; 
+        }
+
+        .row-label {
+            margin-bottom: 5px; 
+        }
+
+        .stitch-block {
+            padding: 5px; 
+        }
+        .stitch-wrapper {
+            border: 2px solid black;
+            border-radius: 5px;             
+
+            display: grid;
+            grid-template-columns: repeat(10, min-content);
+        }
+        
+        .active {
+            opacity: 100%; 
+            font-weight: bold;
+        }
+
+        .box {
+            float: left;
+            height: 20px;
+            width: 20px;
+            margin-bottom: 15px;
+            margin-right: 5px; 
+            border: 1px solid black;
+            clear: both;
+        }
+
+        .legend-item {
+            display: flex; 
+            justify-content: space-between;
+        }
+    </style>
+  </head>
+  <body>
+    <main>
+        <div>
+            <input id="stitch-count" type="number" />
+            <input id="stitch-pattern" type="text" />
+            <button id="add-row-btn" onclick="addRow()">+ Add Row</button>
+            <input id="row-start-count" type="number" />
+        </div> 
+        <div class="row-wrapper">
+            <div id="rows"></div>
+            <div id="legend"></div>
+        </div>
+    </main>
+	<script type="text/javascript">
+        var rowCount = 0; 
+        // at least 1 num, at least 1 letter
+        const patternRe = /\d+\D+/g;
+        var colorMap = {}; 
+
+        function addRow() {
+            let rowStartCount = document.getElementById('row-start-count').value
+            if (rowStartCount > 0) {
+                rowCount = rowStartCount; 
+                document.getElementById('row-start-count').value = 0; 
+            }
+
+            rowCount++; 
+
+            var activeRow = document.getElementsByClassName('active');
+            if (activeRow.length > 0) {
+                for (const row of activeRow) {
+                    row.classList.remove('active');
+                }
+            }
+
+            let newRow = document.createElement('div');
+            newRow.className = 'new-row active'; 
+
+            newRow.addEventListener("click", function() {
+                let isActive = this.classList.contains('active'); 
+
+                if (!isActive) {                    
+                    var activeRow = document.getElementsByClassName('active')[0];                    
+                    activeRow.classList.remove('active');
+
+                    this.classList.add('active'); 
+                }
+            }); 
+
+            let stitchWrapper = document.createElement('div');
+            stitchWrapper.className = 'stitch-wrapper'; 
+            let rowLabel = document.createElement('div');
+            rowLabel.className = 'row-label'; 
+            const rowText =  document.createTextNode('row ' + rowCount); 
+            rowLabel.appendChild(rowText); 
+            
+            newRow.appendChild(rowLabel); 
+            newRow.appendChild(stitchWrapper); 
+
+            const stitchCount = document.getElementById('stitch-count').value; 
+            const matches = document.getElementById('stitch-pattern').value.match(patternRe);
+            
+            var stitchPattern = []; 
+
+            for (let i = 0; i < stitchCount / (matches.length);  i++) {
+                for (const match of matches) {
+                        const patternCount = parseInt(match); 
+                        const pattern = match.replace(/\d+/g, ''); 
+                        var patternColor = colorMap[pattern]; 
+                        if (!patternColor) {
+                            patternColor = 'color:' + randColor() + ';'
+                            colorMap[pattern] = patternColor; 
+
+                            document.getElementById('legend').appendChild(getLegend(patternColor, pattern)); 
+                        }
+
+                        const stitch = {
+                            pattern: pattern,
+                            css: patternColor
+                        }; 
+
+                        for (let j = 0; j < patternCount; j++) {
+                            stitchPattern.push(stitch); 
+                        }
+                }
+            }
+            
+            console.log(stitchPattern); 
+            
+            for (let i = 1; i <= stitchCount; i++) {
+                let stitchBlock = document.createElement('div'); 
+                stitchBlock.className = 'stitch-block'; 
+                stitchBlock.style.cssText = stitchPattern[i - 1].css; 
+                let currentStitch = document.createTextNode(i + '(' + stitchPattern[i - 1].pattern + ')');
+                stitchBlock.appendChild(currentStitch);
+
+                stitchWrapper.appendChild(stitchBlock); 
+            }
+
+            document.getElementById("rows").appendChild(newRow); 
+        }
+        
+        function randColor() {
+            var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += Math.floor(Math.random() * 10);
+    }
+    return color;
+
+        //    return `hsla(${~~(360 * Math.random())}, 70%,  72%, 0.8)`
+        }
+
+        function getLegend(color, pattern) {
+            let patternLegend = document.createElement('div');
+            let patternColorBox = document.createElement('div');
+            let patternColorTextWrapper = document.createElement('div');
+            patternColorBox.className = 'box'; 
+            patternColorBox.style.cssText = 'background-' + color; 
+
+            let legendText = document.createTextNode(pattern);
+            patternColorTextWrapper.appendChild(legendText);
+
+            patternLegend.appendChild(patternColorBox); 
+            patternLegend.appendChild(patternColorTextWrapper);
+            patternLegend.style.cssText = color; 
+            patternLegend.className = 'legend-item'; 
+
+            return patternLegend
+        }
+    </script>
+  </body>
+</html>
