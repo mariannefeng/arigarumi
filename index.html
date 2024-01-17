@@ -34,6 +34,7 @@
         .stitch-block {
             padding: 5px; 
         }
+
         .stitch-wrapper {
             border: 2px solid black;
             border-radius: 5px;             
@@ -45,6 +46,10 @@
         .active {
             opacity: 100%; 
             font-weight: bold;
+        }
+
+        .active-stitch {
+            background-color: black;
         }
 
         .box {
@@ -78,10 +83,12 @@
         </div>
     </main>
 	<script type="text/javascript">
-        var rowCount = 0; 
         // at least 1 num, at least 1 letter
         const patternRe = /\d+\D+/g;
+        
+        var rowCount = 0; 
         var colorMap = {}; 
+        var activeStitch = 0; 
 
         function addRow() {
             let rowStartCount = document.getElementById('row-start-count').value
@@ -151,14 +158,24 @@
                 }
             }
             
-            console.log(stitchPattern); 
-            
             for (let i = 1; i <= stitchCount; i++) {
                 let stitchBlock = document.createElement('div'); 
                 stitchBlock.className = 'stitch-block'; 
                 stitchBlock.style.cssText = stitchPattern[i - 1].css; 
                 let currentStitch = document.createTextNode(i + '(' + stitchPattern[i - 1].pattern + ')');
                 stitchBlock.appendChild(currentStitch);
+                stitchBlock.addEventListener("click", function() {
+                    let isActiveStitch = this.classList.contains('active-stitch'); 
+
+                    if (!isActiveStitch) {                    
+                        var activeStitch = document.getElementsByClassName('active-stitch')[0];                    
+                        if (activeStitch != undefined) {
+                            activeStitch.classList.remove('active-stitch');
+                        }
+
+                        this.classList.add('active-stitch'); 
+                    }
+                }); 
 
                 stitchWrapper.appendChild(stitchBlock); 
             }
