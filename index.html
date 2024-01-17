@@ -57,7 +57,7 @@
             clear: both;
         }
 
-        .legend-item {
+        div[class^='legend-item-'] {
             display: flex; 
             justify-content: space-between;
         }
@@ -136,7 +136,7 @@
                             patternColor = 'color:' + randColor() + ';'
                             colorMap[pattern] = patternColor; 
 
-                            document.getElementById('legend').appendChild(getLegend(patternColor, pattern)); 
+                            document.getElementById('legend').appendChild(getLegendItem(patternColor, pattern)); 
                         }
 
                         const stitch = {
@@ -167,28 +167,33 @@
         
         function randColor() {
             var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += Math.floor(Math.random() * 10);
-    }
-    return color;
-
-        //    return `hsla(${~~(360 * Math.random())}, 70%,  72%, 0.8)`
+            for (var i = 0; i < 6; i++) {
+                color += Math.floor(Math.random() * 10);
+            }
+            return color;
         }
 
-        function getLegend(color, pattern) {
+        function getLegendItem(color, pattern) {
             let patternLegend = document.createElement('div');
             let patternColorBox = document.createElement('div');
             let patternColorTextWrapper = document.createElement('div');
+
             patternColorBox.className = 'box'; 
-            patternColorBox.style.cssText = 'background-' + color; 
-
-            let legendText = document.createTextNode(pattern);
-            patternColorTextWrapper.appendChild(legendText);
-
+            patternColorBox.style.cssText = 'background-' + color;             
+            
+            patternColorBox.addEventListener("click", function() {
+                patternColor = 'color:' + randColor() + ';'; 
+                colorMap[pattern] = patternColor; 
+                this.style.cssText = 'background-' + patternColor;
+                
+                this.parentElement.style.cssText = patternColor; 
+            }); 
+            
+            patternColorTextWrapper.appendChild(document.createTextNode(pattern));
             patternLegend.appendChild(patternColorBox); 
             patternLegend.appendChild(patternColorTextWrapper);
             patternLegend.style.cssText = color; 
-            patternLegend.className = 'legend-item'; 
+            patternLegend.className = 'legend-item-' + pattern; 
 
             return patternLegend
         }
