@@ -90,22 +90,9 @@
         var colorMap = {}; 
         var activeStitch = 0; 
 
-        function addRow() {
-            let rowStartCount = document.getElementById('row-start-count').value
-            if (rowStartCount > 0) {
-                rowCount = rowStartCount; 
-                document.getElementById('row-start-count').value = 0; 
-            }
-
-            rowCount++; 
-
-            var activeRow = document.getElementsByClassName('active');
-            if (activeRow.length > 0) {
-                for (const row of activeRow) {
-                    row.classList.remove('active');
-                }
-            }
-
+        // draw row takes in row number, stitch count, row pattern and 
+        // draws to the rows area
+        function drawRow(rowCount, stitchCount, rowPattern) {
             let newRow = document.createElement('div');
             newRow.className = 'new-row active'; 
 
@@ -129,9 +116,8 @@
             
             newRow.appendChild(rowLabel); 
             newRow.appendChild(stitchWrapper); 
-
-            const stitchCount = document.getElementById('stitch-count').value; 
-            const matches = document.getElementById('stitch-pattern').value.match(patternRe);
+            
+            const matches = rowPattern.match(patternRe);
             
             var stitchPattern = []; 
 
@@ -182,7 +168,27 @@
 
             document.getElementById("rows").appendChild(newRow); 
         }
+
+        function addRow() {
+            let rowStartCount = document.getElementById('row-start-count').value
+            if (rowStartCount > 0) {
+                rowCount = rowStartCount; 
+                document.getElementById('row-start-count').value = 0; 
+            }
+
+            rowCount++; 
+
+            var activeRow = document.getElementsByClassName('active');
+            if (activeRow.length > 0) {
+                for (const row of activeRow) {
+                    row.classList.remove('active');
+                }
+            }
+
+            drawRow(rowCount, document.getElementById('stitch-count').value, document.getElementById('stitch-pattern').value)
+        }
         
+        // randColor returns a random dark readable color 
         function randColor() {
             var color = '#';
             for (var i = 0; i < 6; i++) {
@@ -191,6 +197,7 @@
             return color;
         }
 
+        // getLegendItem returns a new legend item based on a color and pattern
         function getLegendItem(color, pattern) {
             let patternLegend = document.createElement('div');
             let patternColorBox = document.createElement('div');
