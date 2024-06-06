@@ -85,12 +85,107 @@
 	<script type="text/javascript">
         // at least 1 num, at least 1 letter
         const patternRe = /\d+\D+/g;
+        const projectKey = 'arigarumi'; 
         
         var rowCount = 0; 
         var colorMap = {}; 
         var activeStitch = 0; 
 
-        // draw row takes in row number, stitch count, row pattern and 
+        // var testObject = { 'one': 1, 'two': 2, 'three': 3 };
+
+        // // Put the object into storage
+        // localStorage.setItem('testObject', JSON.stringify(testObject));
+
+        // // Retrieve the object from storage
+        // var retrievedObject = localStorage.getItem('testObject');
+
+        // console.log('retrievedObject: ', JSON.parse(retrievedObject));
+
+
+
+        // updates a key/value pair in the cache
+        function addToCache(key, value) {
+            var cache = JSON.parse(localStorage.getItem(projectKey));
+            cache[key] = value; 
+            localStorage.setItem(projectKey, JSON.stringify(cache));
+        }
+
+        // adds to a list at the specified key in the cache
+        function addToCacheList(key, value) {
+            var cache = JSON.parse(localStorage.getItem(projectKey));
+            console.log('inside of cache list, retrieved cache', cache); 
+
+            if (cache == null) {
+                cache = {
+                    key: [value]
+                }     
+            } else {
+                if (cache[key] == null || cache[key] == undefined) {
+                    cache[key] = [value]
+                } else {
+                    cache[key] = cache[key].push(value); 
+                }
+            }
+
+            localStorage.setItem(projectKey, JSON.stringify(cache));
+        }
+
+        // returns a field from cache
+        function getFromCache(key) {
+            return JSON.parse(localStorage.getItem(projectKey))[key];
+        }
+
+        loadFromCache(); 
+
+        // checks local storage to see if a project already exists
+        // if so, load
+        function loadFromCache() {
+            // fields:
+            //  input{ stitchCount, rowPattern }
+            //  active {stitchIdx, rowIdx}
+            //  rows[row{ count, stitchCount, pattern, activeStitchIdx }]
+            //  legend:[{ rowPattern, color }]
+            var projectConfig = JSON.parse(localStorage.getItem(projectKey)); 
+
+            // TODO: fix meeeeee
+            if (projectConfig == undefined) {
+                console.log('project config undefined, setting')
+                localStorage.setItem(projectKey, JSON.stringify({}))
+                return
+            }
+            
+            if (projectConfig.input == undefined) {
+                return
+            }
+            document.getElementById('stitch-count').value = projectConfig.input.stitchCount
+            // TODO: rename stitch-pattern input
+            document.getElementById('stitch-pattern').value = projectConfig.input.rowPattern
+                     
+            if (projectConfig.rows == undefined) {
+                return
+            }
+            for (const row of projectConfig.rows) {
+                drawRow(row.count, row.stitchCount, row.rowPattern)
+                // TODO: make activeStitchIdx work
+            }
+
+            if (projectConfig.legend == undefined) {
+                return
+            }
+            for (const legendItem of projectConfig.legend) { 
+                const patternCount = parseInt(legendItem.rowPattern); 
+                const pattern = rowPattern.replace(/\d+/g, ''); 
+                var patternColor = colorMap[pattern]; 
+                if (!patternColor) {
+                    patternColor = 'color:' + randColor() + ';'
+                    colorMap[pattern] = patternColor; 
+
+                    document.getElementById('legend').appendChild(getLegendItem(patternColor, pattern)); 
+                }
+            }
+        }
+
+        // takes in row number, stitch count, row pattern and 
         // draws to the rows area
         function drawRow(rowCount, stitchCount, rowPattern) {
             let newRow = document.createElement('div');
@@ -131,6 +226,11 @@
                             colorMap[pattern] = patternColor; 
 
                             document.getElementById('legend').appendChild(getLegendItem(patternColor, pattern)); 
+                            
+                            addToCacheList("legend", {
+                                pattern: pattern, 
+                                patternColor: patternColor,
+                            })
                         }
 
                         const stitch = {
@@ -167,6 +267,8 @@
             }
 
             document.getElementById("rows").appendChild(newRow); 
+
+            return stitchPattern; 
         }
 
         function addRow() {
@@ -185,10 +287,25 @@
                 }
             }
 
-            drawRow(rowCount, document.getElementById('stitch-count').value, document.getElementById('stitch-pattern').value)
+            const stitchCount = document.getElementById('stitch-count').value; 
+            const rowPattern = document.getElementById('stitch-pattern').value; 
+
+            const stitchPattern = drawRow(rowCount, stitchCount, rowPattern); 
+
+            // fields:
+            //  input{ stitchCount, rowPattern }
+            //  rows[row{ count, stitchCount, pattern }]
+            //  legend:[{ rowPattern, color }]
+
+            addToCache("input", {stitchCount: stitchCount, rowPattern: rowPattern});     
+            addToCacheList("rows", {
+                count: rowCount, 
+                stitchCount: stitchCount, 
+                rowPattern: rowPattern, 
+            });        
         }
         
-        // randColor returns a random dark readable color 
+        // returns a random dark readable color 
         function randColor() {
             var color = '#';
             for (var i = 0; i < 6; i++) {
@@ -197,7 +314,7 @@
             return color;
         }
 
-        // getLegendItem returns a new legend item based on a color and pattern
+        // returns a new legend item based on a color and pattern
         function getLegendItem(color, pattern) {
             let patternLegend = document.createElement('div');
             let patternColorBox = document.createElement('div');
@@ -212,6 +329,8 @@
                 this.style.cssText = 'background-' + patternColor;
                 
                 this.parentElement.style.cssText = patternColor; 
+
+                // TODO: update cache here
             }); 
             
             patternColorTextWrapper.appendChild(document.createTextNode(pattern));
